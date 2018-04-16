@@ -42,7 +42,7 @@
       // unlock waiting room
       accessWRSeats.signal();
 
-      // wait untill barber is ready
+      // wait until barber is ready
       Log("Customer is WAITING FOR BARBER");
       barberReady.wait();
 
