@@ -1,3 +1,4 @@
+  #include <stdio.h>
   #include <iostream>
   #include <thread>
   #include <mutex>
@@ -6,11 +7,20 @@
   #include <ctime>
   #include <algorithm>
   #include <vector>
+  #include <time.h>
 
   #include "semaphore.h"
 
+  int start_sec;
+  int current_sec;
+
+  int numberOfCustomers = 0;
+
   std::mutex m;
   #define Log(x) m.lock(); std::cout << x << std::endl; m.unlock();
+  #define TimeLog(message, x) m.lock(); std::cout << message << " " << x << " seconds" << std::endl; m.unlock();
+  #define NumOfCusLog(message, x) m.lock(); std::cout << message << " " << x << std::endl; m.unlock();
+  #define incrementNumberOfExsitingCustomers() m.lock(); numberOfCustomers ++; m.unlock();
 
 
   // initially barber is busy
@@ -22,7 +32,14 @@
  // total number of seats in the waiting room
   int numberOfFreeWRSeats = 4;
 
+
   void Customer() {
+
+    incrementNumberOfExsitingCustomers();
+    NumOfCusLog("Number of current customers",numberOfCustomers);
+    // struct tm *tmp = gmtime(&current);
+    // currentsecond  = tmp->tm_sec;
+
     Log("********** Customer **********");
 
     // lock waiting room
@@ -83,21 +100,51 @@
       accessWRSeats.signal();
 
       // cut hair
-      Log("Barber ...is cutting hair");
+      srand(time(NULL));
+      const int timeToCut = (rand() % 6 ) + 5;
+      TimeLog("Barber ... will be cutting hair for", timeToCut);
+      sleep(timeToCut);
     };
   };
 
   int main() {
+    // struct tm *tmp = gmtime(&current);
+    // std::cout << ctime(&current) << std::endl;
+    // second = ;
+
+    time_t start_time = time(NULL);
+    struct tm *tmp = gmtime(&start_time);
+    start_sec = tmp->tm_sec;
+
+    // time_t current-time = time(NULL);
+
     srand(time(NULL));
-    const int numberOfTotalCustomers = rand() % 101;
-    Log(numberOfTotalCustomers);
+    const int numberOfTotalCustomers = rand() % 11;
+    NumOfCusLog("Number Of Total Customers is equal to ",numberOfTotalCustomers);
+
     std::vector<std::thread> threadList;
-    for(unsigned int i = 0; i < numberOfTotalCustomers; i++)
-    {
-        threadList.push_back( std::thread( Customer ) );
-    }
 
     std::thread barber(Barber);
+
+    for(unsigned int i = 0; i < numberOfTotalCustomers; i++)
+    {
+        srand(time(NULL));
+        const int timeToSleep = (rand() % 6 ) + 5;
+        TimeLog(" >>>ENTER: Customer will come in", timeToSleep);
+        sleep(timeToSleep);
+
+        threadList.push_back( std::thread( Customer ) );
+
+        time_t current_time = time(NULL);
+        struct tm *ctmp = gmtime(&current_time);
+        current_sec = ctmp->tm_sec;
+
+        if ( current_sec - start_sec > 5) {
+          Log("TIME TO GO TIME TO GO TIME TO GO TIME TO GO");
+            exit(0);
+        }
+    }
+
 
     for(unsigned int i = 0; i < numberOfTotalCustomers; i++)
     {
@@ -106,5 +153,4 @@
 
     barber.join();
 
-    std::cin.get();
   }

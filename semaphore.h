@@ -1,4 +1,4 @@
-// Primitive Semaphore
+// Primitive Semaphore, counting semaphore
 class Primitive_Semaphore {
 private:
 std::mutex mtx;
