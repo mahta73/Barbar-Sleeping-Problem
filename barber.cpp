@@ -8,20 +8,20 @@
   #include <algorithm>
   #include <vector>
   #include <time.h>
+  #include <cmath>
+  #include <chrono>
 
   #include "semaphore.h"
 
-  int start_sec;
-  int current_sec;
+  // int start_sec = 0;
+  // int current_sec = 0;
 
-  int numberOfCustomers = 0;
+  int copy_numberOfCustomers = 0;
 
   std::mutex m;
   #define Log(x) m.lock(); std::cout << x << std::endl; m.unlock();
   #define TimeLog(message, x) m.lock(); std::cout << message << " " << x << " seconds" << std::endl; m.unlock();
   #define NumOfCusLog(message, x) m.lock(); std::cout << message << " " << x << std::endl; m.unlock();
-  #define incrementNumberOfExsitingCustomers() m.lock(); numberOfCustomers ++; m.unlock();
-
 
   // initially barber is busy
   Binary_Semaphore barberReady(0);
@@ -32,13 +32,25 @@
  // total number of seats in the waiting room
   int numberOfFreeWRSeats = 4;
 
+  int numberOfTotalCustomers = -1;
 
   void Customer() {
 
-    incrementNumberOfExsitingCustomers();
-    NumOfCusLog("Number of current customers",numberOfCustomers);
-    // struct tm *tmp = gmtime(&current);
-    // currentsecond  = tmp->tm_sec;
+/*
+    if ( current_sec > start_sec ) {
+      if ( current_sec - start_sec > 5 ) {
+      NumOfCusLog(" ########################### current_sec - start_sec", current_sec - start_sec);
+      Log("It is time to close the shop");
+      exit(0);
+      }
+    } else {
+        if ( start_sec - current_sec > 5 ) {
+        NumOfCusLog(" ########################### current_sec - start_sec", start_sec - current_sec);
+        Log("It is time to close the shop");
+        exit(0);
+      }
+      };
+*/
 
     Log("********** Customer **********");
 
@@ -75,8 +87,9 @@
   void Barber() {
   Log("********** Barber **********");
 
-    // run in an infinite loop
-    while (true) {
+    while ( copy_numberOfCustomers != 0 ) {
+        m.lock(); copy_numberOfCustomers--; m.unlock();
+        NumOfCusLog(".................numberOfTotalCustomers now is ", copy_numberOfCustomers);
       // wait for  a customer
       Log("Barber IS WAITING for customer");
       custReady.wait();
@@ -105,22 +118,27 @@
       TimeLog("Barber ... will be cutting hair for", timeToCut);
       sleep(timeToCut);
     };
+    Log("All customers are served");
+    exit(0);
   };
 
   int main() {
-    // struct tm *tmp = gmtime(&current);
-    // std::cout << ctime(&current) << std::endl;
-    // second = ;
 
+    /*
     time_t start_time = time(NULL);
     struct tm *tmp = gmtime(&start_time);
     start_sec = tmp->tm_sec;
-
-    // time_t current-time = time(NULL);
+    */
 
     srand(time(NULL));
     const int numberOfTotalCustomers = rand() % 11;
+    copy_numberOfCustomers = numberOfTotalCustomers;
     NumOfCusLog("Number Of Total Customers is equal to ",numberOfTotalCustomers);
+
+    if (numberOfTotalCustomers == 0) {
+      Log("Unfortunately, there is no customer");
+      exit(0);
+    }
 
     std::vector<std::thread> threadList;
 
@@ -128,21 +146,16 @@
 
     for(unsigned int i = 0; i < numberOfTotalCustomers; i++)
     {
-        srand(time(NULL));
         const int timeToSleep = (rand() % 6 ) + 5;
         TimeLog(" >>>ENTER: Customer will come in", timeToSleep);
         sleep(timeToSleep);
 
-        threadList.push_back( std::thread( Customer ) );
-
-        time_t current_time = time(NULL);
+        /*time_t current_time = time(NULL);
         struct tm *ctmp = gmtime(&current_time);
         current_sec = ctmp->tm_sec;
+        */
+        threadList.push_back( std::thread( Customer ) );
 
-        if ( current_sec - start_sec > 5) {
-          Log("TIME TO GO TIME TO GO TIME TO GO TIME TO GO");
-            exit(0);
-        }
     }
 
 
