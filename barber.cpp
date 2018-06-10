@@ -13,9 +13,6 @@
 
   #include "semaphore.h"
 
-  // int start_sec = 0;
-  // int current_sec = 0;
-
   int copy_numberOfCustomers = 0;
 
   std::mutex m;
@@ -35,22 +32,6 @@
   int numberOfTotalCustomers = -1;
 
   void Customer() {
-
-/*
-    if ( current_sec > start_sec ) {
-      if ( current_sec - start_sec > 5 ) {
-      NumOfCusLog(" ########################### current_sec - start_sec", current_sec - start_sec);
-      Log("It is time to close the shop");
-      exit(0);
-      }
-    } else {
-        if ( start_sec - current_sec > 5 ) {
-        NumOfCusLog(" ########################### current_sec - start_sec", start_sec - current_sec);
-        Log("It is time to close the shop");
-        exit(0);
-      }
-      };
-*/
 
     Log("********** Customer **********");
 
@@ -123,13 +104,7 @@
   };
 
   int main() {
-
-    /*
-    time_t start_time = time(NULL);
-    struct tm *tmp = gmtime(&start_time);
-    start_sec = tmp->tm_sec;
-    */
-
+    
     srand(time(NULL));
     const int numberOfTotalCustomers = rand() % 11;
     copy_numberOfCustomers = numberOfTotalCustomers;
@@ -149,11 +124,7 @@
         const int timeToSleep = (rand() % 6 ) + 5;
         TimeLog(" >>>ENTER: Customer will come in", timeToSleep);
         sleep(timeToSleep);
-
-        /*time_t current_time = time(NULL);
-        struct tm *ctmp = gmtime(&current_time);
-        current_sec = ctmp->tm_sec;
-        */
+      
         threadList.push_back( std::thread( Customer ) );
 
     }
